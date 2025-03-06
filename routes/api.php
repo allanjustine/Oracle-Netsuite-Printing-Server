@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/profile', function (Request $request) {
-        return $request->user()->with(['branch', 'roles']);
+        return $request->user()->load(['branch', 'roles']);
     });
 
     Route::controller(AdminController::class)->middleware('role:admin')->prefix('admin')->group(function () {
