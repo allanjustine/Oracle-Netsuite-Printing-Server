@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 });
 
 Route::controller(AuthController::class)->prefix('v1')->group(function () {
-    Route::post('/login', 'store');
+    Route::post('/login', 'store')->middleware('throttle:5,1');
     Route::post('/logout', 'destroy');
 });
 
