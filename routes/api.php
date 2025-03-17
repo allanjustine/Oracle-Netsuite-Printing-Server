@@ -17,11 +17,25 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     });
 });
 
-Route::controller(AuthController::class)->prefix('v1')->group(function () {
-    Route::post('/login', 'store')->middleware('throttle:5,1');
-    Route::post('/logout', 'destroy');
+Route::prefix('v1')->group(function () {
+
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('/login', 'store')->middleware('throttle:5,1');
+        Route::post('/logout', 'destroy');
+    });
+
+    Route::controller(ReceiptController::class)->group(function () {
+        Route::get('/receipt-records', 'index');
+        Route::post('/print-receipt-count', 'store');
+    });
 });
 
-Route::controller(ReceiptController::class)->prefix('v1')->group(function () {
-    Route::post('/print-receipt-count', 'store');
+Route::prefix('v1')->group(function () {
+
+    Route::get('/app-version', function () {
+        $version = env('APP_VERSION');
+        return response()->json([
+            "version"          =>   $version
+        ], 200);
+    });
 });

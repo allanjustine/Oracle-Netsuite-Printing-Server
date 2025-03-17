@@ -13,7 +13,12 @@ class ReceiptController extends Controller
      */
     public function index()
     {
-        //
+        $receipts = Receipt::all();
+
+        return response()->json([
+            'message'       => "All receipts fetched successfully",
+            'receipts'      => $receipts
+        ], 200);
     }
 
     /**
@@ -39,7 +44,7 @@ class ReceiptController extends Controller
             ], 400);
         }
 
-        if($request->external_id === null || $request->print_by === null) {
+        if ($request->external_id === null || $request->print_by === null) {
             return response()->json([
                 'message'       => "Ops! Something went wrong. Please try again.",
             ], 400);
