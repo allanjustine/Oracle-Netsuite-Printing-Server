@@ -1,0 +1,41 @@
+services:
+  netsuite-server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: netsuite-server
+    container_name: netsuite-server
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+     # - ./storage:/var/www/storage
+     # - ./bootstrap/cache:/var/www/bootstrap/cache
+      - ./:/var/www
+      - ./docker-compose/nginx/default.conf:/etc/nginx/nginx.conf
+
+    networks:
+      - netsuite
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: 172.17.0.1 
+      DB_PORT: 3306
+      DB_DATABASE: netsuite-print
+      DB_USERNAME: smct
+      DB_PASSWORD: smct 
+
+  netsuite-nginx:
+    image: nginx:alpine
+    container_name: netsuite-nginx
+    restart: unless-stopped
+    ports:
+      - 1002:1002
+    volumes:
+      - ./docker-compose/nginx/default.conf:/etc/nginx/nginx.conf
+      - ./:/var/www
+
+    networks:
+      - netsuite
+
+networks:
+  netsuite:
+    driver: bridge
