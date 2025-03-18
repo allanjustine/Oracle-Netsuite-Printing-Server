@@ -12,13 +12,13 @@ RUN apk --no-cache add \
     && docker-php-ext-install pdo pdo_mysql
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /var/www
 
 # Install Composer (Laravel's dependency manager)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy your Laravel project into the container
-COPY . /var/www/html
+COPY . /var/www
 
 EXPOSE 1002
 
