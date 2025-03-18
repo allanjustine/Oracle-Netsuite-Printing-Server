@@ -10,6 +10,7 @@ services:
     volumes:
      # - ./storage:/var/www/storage
      # - ./bootstrap/cache:/var/www/bootstrap/cache
+      - /home/webserver/systems/Oracle-Netsuite-Printing-Server/.env:/var/www/.env
       - ./:/var/www
       - ./docker-compose/nginx/default.conf:/etc/nginx/nginx.conf
 
