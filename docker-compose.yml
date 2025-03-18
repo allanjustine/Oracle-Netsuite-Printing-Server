@@ -11,18 +11,18 @@ services:
      # - ./storage:/var/www/storage
      # - ./bootstrap/cache:/var/www/bootstrap/cache
       - /home/webserver/systems/Oracle-Netsuite-Printing-Server/.env:/var/www/.env
-      - ./:/var/www
+      - ./:/var/www/html
       - ./docker-compose/nginx/default.conf:/etc/nginx/nginx.conf
 
     networks:
       - netsuite
     environment:
       DB_CONNECTION: mysql
-      DB_HOST: 172.17.0.1 
+      DB_HOST: 172.17.0.1
       DB_PORT: 3306
       DB_DATABASE: netsuite-print
       DB_USERNAME: smct
-      DB_PASSWORD: smct 
+      DB_PASSWORD: smct
 
   netsuite-nginx:
     image: nginx:alpine
@@ -32,7 +32,7 @@ services:
       - 1002:1002
     volumes:
       - ./docker-compose/nginx/default.conf:/etc/nginx/nginx.conf
-      - ./:/var/www
+      - ./:/var/www/html
 
     networks:
       - netsuite
