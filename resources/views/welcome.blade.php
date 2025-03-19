@@ -10,7 +10,6 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 
     <!-- Styles / Scripts -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -25,7 +24,6 @@
 
     <div
         class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
-        <img src="/favicon.ico" alt="">
         <main class="flex justify-center items-center">
             <div class="border border-gray-200 p-5 rounded-sm shadow shadow-gray-300">
                 <p class="text-4xl font-bold text-center text-white animate-typing">
