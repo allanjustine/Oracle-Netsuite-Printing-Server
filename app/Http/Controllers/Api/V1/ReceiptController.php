@@ -49,6 +49,8 @@ class ReceiptController extends Controller
         // calculating percentage of monthly receipts
         $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format($monthly_receipts_count / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
+        $searchingIfExists = Receipt::get(['external_id', 'print_count']);
+
         return response()->json([
             'message'                      => "All receipts fetched successfully",
             'receipts'                     => $receipts,
@@ -60,6 +62,7 @@ class ReceiptController extends Controller
             'todays_percentage'            => $todays_percentage,
             'monthly_percentage'           => $monthly_percentage,
             'weekly_percentage'            => $weekly_percentage,
+            'searching_if_exists'          => $searchingIfExists,
         ], 200);
     }
 
