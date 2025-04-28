@@ -56,7 +56,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve --port=8001\" \"php artisan queue:listen --tries=1\" \"php artisan reverb:start\" \"cd ../netsuite-printing && pnpm run dev\""
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve --port=8001\" \"php artisan queue:listen --tries=1\" \"php artisan reverb:start\" \"npm run dev\" \"cd ../netsuite-printing && pnpm run dev\""
         ]
     },
     "extra": {
