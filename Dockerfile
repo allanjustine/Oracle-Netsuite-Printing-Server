@@ -17,6 +17,9 @@ WORKDIR /var/www
 # Install Composer (Laravel's dependency manager)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Run Artisan commands (Reverb start)
+RUN php artisan reverb:start
+
 # Copy your Laravel project into the container
 COPY . /var/www
 
