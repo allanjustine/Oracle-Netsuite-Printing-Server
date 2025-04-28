@@ -23,7 +23,7 @@ services:
       DB_DATABASE: netsuite-print
       DB_USERNAME: smct
       DB_PASSWORD: smct
-    command: php artisan queue:listen --tries=1
+    # command: php artisan queue:listen --tries=1
 
   netsuite-nginx:
     image: nginx:alpine
