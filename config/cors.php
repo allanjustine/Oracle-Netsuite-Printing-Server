@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://netsuite-print.smctgroup.ph', 'http://localhost:3000'],
+    'allowed_origins' => ['https://netsuite-print.smctgroup.ph', 'http://localhost:3000', 'https://netsuite-server.smctgroup.ph'],
 
     'allowed_origins_patterns' => [],
 
