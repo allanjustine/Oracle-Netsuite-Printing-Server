@@ -39,8 +39,8 @@ services:
 
   netsuite-reverb:
     build:
-    context: .
-    dockerfile: Dockerfile-reverb
+      context: ./
+      dockerfile: Dockerfile-reverb
     ports:
     - "8080:8080" # expose Reverb server
     environment:
