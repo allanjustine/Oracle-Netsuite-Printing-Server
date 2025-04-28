@@ -15,26 +15,19 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'broadcasting/auth'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'https://netsuite-print.smctgroup.ph',
-        'https://netsuite-server.smctgroup.ph',
-        'http://localhost:3000'
-    ],
+    'allowed_origins' => ['https://netsuite-print.smctgroup.ph', 'http://localhost:3000'],
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [
-        'Authorization',
-        'X-Socket-ID'
-    ],
+    'exposed_headers' => [],
 
-    'max_age' => 86400,
+    'max_age' => 0,
 
     'supports_credentials' => true,
 
