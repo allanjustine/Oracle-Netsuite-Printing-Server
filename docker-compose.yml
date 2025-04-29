@@ -50,6 +50,8 @@ services:
     - LARAVEL_REVERB_APP_SECRET=${REVERB_APP_SECRET}
     depends_on:
     - netsuite-server
+    restart: unless-stopped
+    container_name: netsuite-reverb
 
     networks:
       - netsuite
