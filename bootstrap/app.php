@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'api/v1/maintenance-mode-off',
+            'api/v1/maintenance-mode'
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
