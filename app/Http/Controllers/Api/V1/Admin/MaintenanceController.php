@@ -34,7 +34,7 @@ class MaintenanceController extends Controller
 
         return response()->json([
             'message'       => 'Maintenance mode on',
-        ], 201);
+        ], 204);
     }
 
     public function maintenanceModeOff()
@@ -52,7 +52,7 @@ class MaintenanceController extends Controller
 
         return response()->json([
             'message'       => 'Maintenance mode off',
-        ], 201);
+        ], 204);
     }
 
     public function index()
