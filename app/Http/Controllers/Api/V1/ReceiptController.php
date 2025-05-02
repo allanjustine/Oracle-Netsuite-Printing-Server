@@ -25,8 +25,14 @@ class ReceiptController extends Controller
         $query = Receipt::query();
 
         // total invoice and total customer payment used clone to avoid changing the original query
-        $totalInvoice = (clone $query)->where('external_id', 'LIKE', '%INV-%')->count();
-        $totalCustPay = (clone $query)->where('external_id', 'LIKE', '%CustPay-%')->count();
+        $totalInvoice = (clone $query)
+            ->where('external_id', 'LIKE', '%INV-%')
+            ->count();
+        $totalCustPay = (clone $query)
+            ->where('external_id', 'LIKE', '%CustPay-%')
+            ->orWhere('external_id', 'LIKE', '%CSDEP-%')
+            ->orWhere('external_id', 'LIKE', '%CS-%')
+            ->count();
 
         // total receipts count
         $totalReceipts = $query->count();
@@ -81,7 +87,7 @@ class ReceiptController extends Controller
             'weekly_percentage'            => $weekly_percentage,
             'searching_if_exists'          => $searchingIfExists,
             'total_invoice'                => $totalInvoice,
-            'total_cust_pay'               => $totalCustPay
+            'total_cust_pay'               => $totalCustPay,
         ], 200);
     }
 
