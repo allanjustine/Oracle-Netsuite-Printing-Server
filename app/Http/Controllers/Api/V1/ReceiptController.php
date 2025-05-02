@@ -23,6 +23,10 @@ class ReceiptController extends Controller
 
         $query = Receipt::query();
 
+        $totalInvoice = (clone $query)->where('external_id', 'LIKE', '%INV-%')->count();
+
+        $totalCustPay = (clone $query)->where('external_id', 'LIKE', '%CustPay-%')->count();
+
         $totalReceipts = $query->count();
 
         $receipts = $query->when($column && $direction, fn($query) => $query->orderBy($column, $direction))
@@ -73,6 +77,8 @@ class ReceiptController extends Controller
             'monthly_percentage'           => $monthly_percentage,
             'weekly_percentage'            => $weekly_percentage,
             'searching_if_exists'          => $searchingIfExists,
+            'total_invoice'                => $totalInvoice,
+            'total_cust_pay'               => $totalCustPay
         ], 200);
     }
 
