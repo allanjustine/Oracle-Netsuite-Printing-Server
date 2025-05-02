@@ -16,12 +16,19 @@ class ReceiptController extends Controller
     public function index(Request $request)
     {
         // fetch all receipts
-        $searchTerm = $request->query('search');
-        $receipts = Receipt::when($searchTerm, function ($query) use ($searchTerm) {
-            $query->where("print_by", "LIKE", "%{$searchTerm}%")
-                ->orWhere("external_id", "LIKE", "%{$searchTerm}%");
-        })
-            ->paginate(20);
+        $searchTerm = $request->search;
+        $column = $request->column;
+        $direction = $request->direction;
+        $per_page = $request->per_page;
+
+        $query = Receipt::query();
+
+        $totalReceipts = $query->count();
+
+        $receipts = $query->when($column && $direction, fn($query) => $query->orderBy($column, $direction))
+            ->when($searchTerm, fn($query) => $query->where("print_by", "LIKE", "%{$searchTerm}%")
+                ->orWhere("external_id", "LIKE", "%{$searchTerm}%"))
+            ->paginate($per_page);
 
         // fetch latest 10 receipts
         $latest_receipts = Receipt::latest()->take(10)->get();
@@ -57,6 +64,7 @@ class ReceiptController extends Controller
             'message'                      => "All receipts fetched successfully",
             'receipts'                     => $receipts,
             'latest_receipts'              => $latest_receipts,
+            'total_receipts'               => $totalReceipts,
             'todays_receipts_count'        => $todays_receipts_count,
             'weekly_receipts_count'        => $weekly_receipts_count,
             'monthly_receipts_count'       => $monthly_receipts_count,
