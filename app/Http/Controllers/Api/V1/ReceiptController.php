@@ -15,20 +15,23 @@ class ReceiptController extends Controller
      */
     public function index(Request $request)
     {
-        // fetch all receipts
+        // fetch all receipts query
         $searchTerm = $request->search;
         $column = $request->column;
         $direction = $request->direction;
         $per_page = $request->per_page;
 
+        // query all receipts
         $query = Receipt::query();
 
+        // total invoice and total customer payment used clone to avoid changing the original query
         $totalInvoice = (clone $query)->where('external_id', 'LIKE', '%INV-%')->count();
-
         $totalCustPay = (clone $query)->where('external_id', 'LIKE', '%CustPay-%')->count();
 
+        // total receipts count
         $totalReceipts = $query->count();
 
+        // fetch all receipts with when to apply search and sorting and pagination and per page
         $receipts = $query->when($column && $direction, fn($query) => $query->orderBy($column, $direction))
             ->when($searchTerm, fn($query) => $query->where("print_by", "LIKE", "%{$searchTerm}%")
                 ->orWhere("external_id", "LIKE", "%{$searchTerm}%"))
@@ -42,7 +45,6 @@ class ReceiptController extends Controller
         $yesterdays_receipts_count = Receipt::whereBeforeToday('created_at')->count();
 
         // get the total weekly and last week receipts counts
-
         $weekly_receipts_count = Receipt::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
         $last_weekly_receipts_count = Receipt::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->count();
 
@@ -62,6 +64,7 @@ class ReceiptController extends Controller
         // calculating percentage of monthly receipts
         $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format($monthly_receipts_count / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
+        // get all receipts with external_id, print_count and re_print for existing receipt without pagination
         $searchingIfExists = Receipt::get(['external_id', 'print_count', 're_print']);
 
         return response()->json([
