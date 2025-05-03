@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('receipts', function (Blueprint $table) {
+        Schema::create('maintenance_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('external_id')->nullable();
-            $table->integer('print_count')->nullable();
-            $table->string('print_by')->nullable();
-            $table->boolean('re_print')->default(false);
+            $table->string('maintenance_type')->nullable();
+            $table->dateTime('finished_at')->nullable();
+            $table->boolean('is_finished')->default(false);
+            $table->boolean('is_maintenance')->default(true);
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('receipts');
+        Schema::dropIfExists('maintenance_logs');
     }
 };

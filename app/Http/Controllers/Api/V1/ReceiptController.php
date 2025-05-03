@@ -6,6 +6,7 @@ use App\Events\ReceiptRecords;
 use App\Http\Controllers\Controller;
 use App\Models\Receipt;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ReceiptController extends Controller
 {
@@ -14,12 +15,33 @@ class ReceiptController extends Controller
      */
     public function index(Request $request)
     {
-        // fetch all receipts
-        $searchTerm = $request->query('search');
-        $receipts = Receipt::when($searchTerm, function ($query) use ($searchTerm) {
-            $query->where("print_by", "LIKE", "%{$searchTerm}%");
-        })
-            ->paginate(20);
+        // fetch all receipts query
+        $searchTerm = $request->search;
+        $column = $request->column;
+        $direction = $request->direction;
+        $per_page = $request->per_page;
+
+        // query all receipts
+        $query = Receipt::query();
+
+        // total invoice and total customer payment used clone to avoid changing the original query
+        $totalInvoice = (clone $query)
+            ->where('external_id', 'LIKE', '%INV-%')
+            ->count();
+        $totalCustPay = (clone $query)
+            ->where('external_id', 'LIKE', '%CustPay-%')
+            ->orWhere('external_id', 'LIKE', '%CSDEP-%')
+            ->orWhere('external_id', 'LIKE', '%CS-%')
+            ->count();
+
+        // total receipts count
+        $totalReceipts = $query->count();
+
+        // fetch all receipts with when to apply search and sorting and pagination and per page
+        $receipts = $query->when($column && $direction, fn($query) => $query->orderBy($column, $direction))
+            ->when($searchTerm, fn($query) => $query->where("print_by", "LIKE", "%{$searchTerm}%")
+                ->orWhere("external_id", "LIKE", "%{$searchTerm}%"))
+            ->paginate($per_page);
 
         // fetch latest 10 receipts
         $latest_receipts = Receipt::latest()->take(10)->get();
@@ -29,7 +51,6 @@ class ReceiptController extends Controller
         $yesterdays_receipts_count = Receipt::whereBeforeToday('created_at')->count();
 
         // get the total weekly and last week receipts counts
-
         $weekly_receipts_count = Receipt::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
         $last_weekly_receipts_count = Receipt::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->count();
 
@@ -49,12 +70,14 @@ class ReceiptController extends Controller
         // calculating percentage of monthly receipts
         $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format($monthly_receipts_count / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
-        $searchingIfExists = Receipt::get(['external_id', 'print_count']);
+        // get all receipts with external_id, print_count and re_print for existing receipt without pagination
+        $searchingIfExists = Receipt::get(['external_id', 'print_count', 're_print']);
 
         return response()->json([
             'message'                      => "All receipts fetched successfully",
             'receipts'                     => $receipts,
             'latest_receipts'              => $latest_receipts,
+            'total_receipts'               => $totalReceipts,
             'todays_receipts_count'        => $todays_receipts_count,
             'weekly_receipts_count'        => $weekly_receipts_count,
             'monthly_receipts_count'       => $monthly_receipts_count,
@@ -63,6 +86,8 @@ class ReceiptController extends Controller
             'monthly_percentage'           => $monthly_percentage,
             'weekly_percentage'            => $weekly_percentage,
             'searching_if_exists'          => $searchingIfExists,
+            'total_invoice'                => $totalInvoice,
+            'total_cust_pay'               => $totalCustPay,
         ], 200);
     }
 
@@ -82,7 +107,7 @@ class ReceiptController extends Controller
         $existsReceipt = Receipt::where('external_id', $request->external_id)
             ->first();
 
-        if ($existsReceipt && $existsReceipt->print_count === "1") {
+        if ($existsReceipt && $existsReceipt->print_count >= 1 && $existsReceipt?->re_print === false) {
 
             return response()->json([
                 'message'       => "{$request->external_id} receipt is already printed by {$request->print_by}",
@@ -95,11 +120,20 @@ class ReceiptController extends Controller
             ], 400);
         }
 
-        $receipt = Receipt::create([
-            'external_id'       => $request->external_id,
-            'print_by'          => $request->print_by,
-            'print_count'       => 1
-        ]);
+        if ($existsReceipt || $existsReceipt?->re_print === true) {
+            $existsReceipt->increment('print_count');
+            $existsReceipt->update([
+                're_print' => false
+            ]);
+            $receipt = $existsReceipt;
+        } else {
+            $receipt = Receipt::create([
+                'external_id'       => $request->external_id,
+                'print_by'          => $request->print_by,
+                'print_count'       => 1
+            ]);
+        }
+
 
         ReceiptRecords::dispatch($receipt);
 
@@ -130,7 +164,35 @@ class ReceiptController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $receiptRecord = Receipt::find($id);
+
+        $validation = Validator::make($request->all(), [
+            'external_id'       => ['required'],
+            'print_by'          => ['required'],
+            're_print'          => ['required']
+        ]);
+
+        if ($validation->fails()) {
+            return response()->json([
+                'errors'        => $validation->errors()
+            ], 400);
+        }
+
+        if (!$receiptRecord) {
+            return response()->json([
+                'message'       => 'Receipt record not found',
+            ], 404);
+        }
+
+        $receiptRecord->update([
+            'external_id'       => $request->external_id,
+            'print_by'          => $request->print_by,
+            're_print'          => $request->re_print
+        ]);
+
+        return response()->json([
+            'message'       => 'Receipt updated successfully',
+        ], 204);
     }
 
     /**
@@ -138,6 +200,18 @@ class ReceiptController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $receiptRecord = Receipt::find($id);
+
+        if (!$receiptRecord) {
+            return response()->json([
+                'message'       => 'Receipt record not found',
+            ], 404);
+        }
+
+        $receiptRecord->delete();
+
+        return response()->json([
+            'message'       => 'Receipt deleted successfully',
+        ], 204);
     }
 }

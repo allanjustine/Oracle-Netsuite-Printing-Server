@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AdminController;
+use App\Http\Controllers\Api\V1\Admin\MaintenanceController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\ReceiptController;
 use Illuminate\Http\Request;
@@ -27,15 +28,20 @@ Route::prefix('v1')->group(function () {
     Route::controller(ReceiptController::class)->group(function () {
         Route::get('/receipt-records', 'index');
         Route::post('/print-receipt-count', 'store');
+        Route::patch('/print-receipt/{id}', 'update');
+        Route::delete('/print-receipt/{id}', 'destroy');
     });
-});
 
-Route::prefix('v1')->group(function () {
+    Route::controller(MaintenanceController::class)->group(function () {
+        Route::post('/maintenance-mode-on', 'maintenanceModeOn');
+        Route::post('/maintenance-mode-off', 'maintenanceModeOff');
+        Route::get('/maintenance-mode', 'index');
+    });
 
     Route::get('/app-version', function () {
         $version = env('APP_VERSION');
         return response()->json([
-            "version"          =>   $version
+            "version"          =>   $version,
         ], 200);
     });
 });
