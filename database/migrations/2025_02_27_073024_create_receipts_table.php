@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('print_count')->nullable();
             $table->string('print_by')->nullable();
             $table->boolean('re_print')->default(false);
+            $table->decimal("total_amount_due", 15, 2)->default(0.00)->nullable();
             $table->timestamps();
         });
     }
