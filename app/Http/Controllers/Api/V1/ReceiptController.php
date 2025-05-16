@@ -151,7 +151,8 @@ class ReceiptController extends Controller
         if ($existsReceipt || $existsReceipt?->re_print === true) {
             $existsReceipt->increment('print_count');
             $existsReceipt->update([
-                're_print' => false
+                're_print'          => false,
+                'total_amount_due'  => $request->total_amount_due
             ]);
             $receipt = $existsReceipt;
         } else {
