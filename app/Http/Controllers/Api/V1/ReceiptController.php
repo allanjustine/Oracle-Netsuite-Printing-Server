@@ -87,8 +87,11 @@ class ReceiptController extends Controller
             ->where('re_print', false)
             ->exists();
 
-        // sum all total amount due of over all receipts
+        // sum all total sales of over all receipts
         $overAllTotalAmountDue = Receipt::sum('total_amount_due');
+
+        // sum todays total sales of receipts
+        $todaysTotalAmountDue = Receipt::whereToday('created_at')->sum('total_amount_due');
 
 
         return response()->json([
@@ -111,7 +114,8 @@ class ReceiptController extends Controller
             'last_monthly_receipts_count'  => $last_monthly_receipts_count,
             'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
             'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
-            'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ",")
+            'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
+            'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
         ], 200);
     }
 
