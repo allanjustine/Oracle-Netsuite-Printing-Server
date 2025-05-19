@@ -23,7 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->preventRequestsDuringMaintenance(except: [
             'api/v1/maintenance-mode-off',
-            'api/v1/maintenance-mode'
+            'api/v1/maintenance-mode',
+            'api/v1/profile',
+            'api/v1/receipt-records',
+            'api/v1/print-receipt/*'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

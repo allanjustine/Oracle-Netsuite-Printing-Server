@@ -20,6 +20,7 @@ class ReceiptController extends Controller
         $column = $request->column;
         $direction = $request->direction;
         $per_page = $request->per_page;
+        $external_id = $request->external_id;
 
         // query all receipts
         $query = Receipt::query();
@@ -33,6 +34,16 @@ class ReceiptController extends Controller
             ->orWhere('external_id', 'LIKE', '%CSDEP-%')
             ->orWhere('external_id', 'LIKE', '%CS-%')
             ->count();
+
+        // sum all total invoice and total cr
+        $totalInvoiceSum = (clone $query)
+            ->where('external_id', 'LIKE', '%INV-%')
+            ->sum('total_amount_due');
+        $totalCustPaySum = (clone $query)
+            ->where('external_id', 'LIKE', '%CustPay-%')
+            ->orWhere('external_id', 'LIKE', '%CSDEP-%')
+            ->orWhere('external_id', 'LIKE', '%CS-%')
+            ->sum('total_amount_due');
 
         // total receipts count
         $totalReceipts = $query->count();
@@ -48,7 +59,7 @@ class ReceiptController extends Controller
 
         // get the total count of today and yesterday receipts
         $todays_receipts_count = Receipt::whereToday('created_at')->count();
-        $yesterdays_receipts_count = Receipt::whereBeforeToday('created_at')->count();
+        $yesterdays_receipts_count = Receipt::whereDate('created_at', now()->yesterday())->count();
 
         // get the total weekly and last week receipts counts
         $weekly_receipts_count = Receipt::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
@@ -62,16 +73,26 @@ class ReceiptController extends Controller
         $total_branch_print_records = Receipt::distinct('print_by')->count();
 
         // calculating percentage of todays receipts
-        $todays_percentage = $yesterdays_receipts_count > 0 ? number_format($todays_receipts_count / $yesterdays_receipts_count * 100, 2) : number_format(100, 2);
+        $todays_percentage = $yesterdays_receipts_count > 0 ? number_format(($todays_receipts_count - $yesterdays_receipts_count) / $yesterdays_receipts_count * 100, 2) : number_format(100, 2);
 
         // calculating percentage of weekly receipts
-        $weekly_percentage = $last_weekly_receipts_count > 0 ? number_format($weekly_receipts_count / $last_weekly_receipts_count * 100, 2) : number_format(100, 2);
+        $weekly_percentage = $last_weekly_receipts_count > 0 ? number_format(($weekly_receipts_count - $last_weekly_receipts_count) / $last_weekly_receipts_count * 100, 2) : number_format(100, 2);
 
         // calculating percentage of monthly receipts
-        $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format($monthly_receipts_count / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
+        $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format(($monthly_receipts_count - $last_monthly_receipts_count) / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
         // get all receipts with external_id, print_count and re_print for existing receipt without pagination
-        $searchingIfExists = Receipt::get(['external_id', 'print_count', 're_print']);
+        $searchingIfExists = Receipt::where('external_id', $external_id)
+            ->where('print_count', ">=", 1)
+            ->where('re_print', false)
+            ->exists();
+
+        // sum all total sales of over all receipts
+        $overAllTotalAmountDue = Receipt::sum('total_amount_due');
+
+        // sum todays total sales of receipts
+        $todaysTotalAmountDue = Receipt::whereToday('created_at')->sum('total_amount_due');
+
 
         return response()->json([
             'message'                      => "All receipts fetched successfully",
@@ -88,6 +109,13 @@ class ReceiptController extends Controller
             'searching_if_exists'          => $searchingIfExists,
             'total_invoice'                => $totalInvoice,
             'total_cust_pay'               => $totalCustPay,
+            'yesterdays_receipts_count'    => $yesterdays_receipts_count,
+            'last_weekly_receipts_count'   => $last_weekly_receipts_count,
+            'last_monthly_receipts_count'  => $last_monthly_receipts_count,
+            'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
+            'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
+            'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
+            'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
         ], 200);
     }
 
@@ -123,14 +151,16 @@ class ReceiptController extends Controller
         if ($existsReceipt || $existsReceipt?->re_print === true) {
             $existsReceipt->increment('print_count');
             $existsReceipt->update([
-                're_print' => false
+                're_print'          => false,
+                'total_amount_due'  => $request->total_amount_due
             ]);
             $receipt = $existsReceipt;
         } else {
             $receipt = Receipt::create([
                 'external_id'       => $request->external_id,
                 'print_by'          => $request->print_by,
-                'print_count'       => 1
+                'print_count'       => 1,
+                'total_amount_due'  => $request->total_amount_due
             ]);
         }
 
