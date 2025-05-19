@@ -73,13 +73,13 @@ class ReceiptController extends Controller
         $total_branch_print_records = Receipt::distinct('print_by')->count();
 
         // calculating percentage of todays receipts
-        $todays_percentage = $yesterdays_receipts_count > 0 ? number_format($todays_receipts_count / $yesterdays_receipts_count * 100, 2) : number_format(100, 2);
+        $todays_percentage = $yesterdays_receipts_count > 0 ? number_format(($todays_receipts_count - $yesterdays_receipts_count) / $yesterdays_receipts_count * 100, 2) : number_format(100, 2);
 
         // calculating percentage of weekly receipts
-        $weekly_percentage = $last_weekly_receipts_count > 0 ? number_format($weekly_receipts_count / $last_weekly_receipts_count * 100, 2) : number_format(100, 2);
+        $weekly_percentage = $last_weekly_receipts_count > 0 ? number_format(($weekly_receipts_count - $last_weekly_receipts_count) / $last_weekly_receipts_count * 100, 2) : number_format(100, 2);
 
         // calculating percentage of monthly receipts
-        $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format($monthly_receipts_count / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
+        $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format(($monthly_receipts_count - $last_monthly_receipts_count) / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
         // get all receipts with external_id, print_count and re_print for existing receipt without pagination
         $searchingIfExists = Receipt::where('external_id', $external_id)
