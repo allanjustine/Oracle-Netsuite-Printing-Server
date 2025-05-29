@@ -93,6 +93,8 @@ class ReceiptController extends Controller
         // sum todays total sales of receipts
         $todaysTotalAmountDue = Receipt::whereToday('created_at')->sum('total_amount_due');
 
+        $mostPrintCountBranch = $this->mostPrintCountBranch();
+
 
         return response()->json([
             'message'                      => "All receipts fetched successfully",
@@ -116,7 +118,19 @@ class ReceiptController extends Controller
             'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
             'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
             'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
+            'most_print_count_branch'      => $mostPrintCountBranch
         ], 200);
+    }
+
+    private function mostPrintCountBranch()
+    {
+        $mostPrintCountBranch = Receipt::query()
+            ->where('print_count', '>', 1)
+            ->orderBy("print_count", 'desc')
+            ->take(10)
+            ->get(['external_id', 'print_count', 'print_by', 'updated_at']);
+
+        return $mostPrintCountBranch;
     }
 
     /**
