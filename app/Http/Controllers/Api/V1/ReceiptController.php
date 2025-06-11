@@ -93,30 +93,51 @@ class ReceiptController extends Controller
         // sum todays total sales of receipts
         $todaysTotalAmountDue = Receipt::whereToday('created_at')->sum('total_amount_due');
 
+        $mostPrintCountBranch = $this->mostPrintCountBranch();
+
+        $datas = async(
+            fn() =>
+            [
+                'receipts'                     => $receipts,
+                'latest_receipts'              => $latest_receipts,
+                'total_receipts'               => $totalReceipts,
+                'todays_receipts_count'        => $todays_receipts_count,
+                'weekly_receipts_count'        => $weekly_receipts_count,
+                'monthly_receipts_count'       => $monthly_receipts_count,
+                'total_branch_print_records'   => $total_branch_print_records,
+                'todays_percentage'            => $todays_percentage,
+                'monthly_percentage'           => $monthly_percentage,
+                'weekly_percentage'            => $weekly_percentage,
+                'searching_if_exists'          => $searchingIfExists,
+                'total_invoice'                => $totalInvoice,
+                'total_cust_pay'               => $totalCustPay,
+                'yesterdays_receipts_count'    => $yesterdays_receipts_count,
+                'last_weekly_receipts_count'   => $last_weekly_receipts_count,
+                'last_monthly_receipts_count'  => $last_monthly_receipts_count,
+                'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
+                'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
+                'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
+                'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
+                'most_print_count_branch'      => $mostPrintCountBranch
+            ]
+        );
+
 
         return response()->json([
             'message'                      => "All receipts fetched successfully",
-            'receipts'                     => $receipts,
-            'latest_receipts'              => $latest_receipts,
-            'total_receipts'               => $totalReceipts,
-            'todays_receipts_count'        => $todays_receipts_count,
-            'weekly_receipts_count'        => $weekly_receipts_count,
-            'monthly_receipts_count'       => $monthly_receipts_count,
-            'total_branch_print_records'   => $total_branch_print_records,
-            'todays_percentage'            => $todays_percentage,
-            'monthly_percentage'           => $monthly_percentage,
-            'weekly_percentage'            => $weekly_percentage,
-            'searching_if_exists'          => $searchingIfExists,
-            'total_invoice'                => $totalInvoice,
-            'total_cust_pay'               => $totalCustPay,
-            'yesterdays_receipts_count'    => $yesterdays_receipts_count,
-            'last_weekly_receipts_count'   => $last_weekly_receipts_count,
-            'last_monthly_receipts_count'  => $last_monthly_receipts_count,
-            'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
-            'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
-            'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
-            'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
+            'datas'                        => await($datas)
         ], 200);
+    }
+
+    private function mostPrintCountBranch()
+    {
+        $mostPrintCountBranch = Receipt::query()
+            ->where('print_count', '>', 1)
+            ->orderBy("print_count", 'desc')
+            ->take(10)
+            ->get(['external_id', 'print_count', 'print_by', 'updated_at']);
+
+        return $mostPrintCountBranch;
     }
 
     /**
