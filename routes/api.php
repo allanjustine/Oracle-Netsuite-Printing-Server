@@ -28,8 +28,8 @@ Route::prefix('v1')->group(function () {
     Route::controller(ReceiptController::class)->group(function () {
         Route::get('/receipt-records', 'index');
         Route::post('/print-receipt-count', 'store');
-        Route::patch('/print-receipt/{id}', 'update');
-        Route::delete('/print-receipt/{id}', 'destroy');
+        Route::patch('/print-receipt/{id}/update-reciept', 'update');
+        Route::delete('/print-receipt/{id}/delete-reciept', 'destroy');
     });
 
     Route::controller(MaintenanceController::class)->group(function () {
