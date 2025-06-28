@@ -235,6 +235,12 @@ class ReceiptController extends Controller
             ], 404);
         }
 
+        if($receiptRecord->re_print === true) {
+            return response()->json([
+                'message'       => 'Ops! this receipt is already re-printed',
+            ], 400);
+        }
+
         $receiptRecord->update([
             'external_id'       => $request->external_id,
             'print_by'          => $request->print_by,
