@@ -235,7 +235,7 @@ class ReceiptController extends Controller
             ], 404);
         }
 
-        if($receiptRecord->re_print === true) {
+        if ($receiptRecord->re_print === $request->re_print) {
             return response()->json([
                 'message'       => 'Ops! this receipt is already re-printed',
             ], 400);
