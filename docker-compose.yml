@@ -56,6 +56,16 @@ services:
     networks:
       - netsuite
 
+cloudflared-netsuite-printing-server:
+    image: cloudflare/cloudflared:latest
+    container_name: netsuite-printing-server-tunnel
+    restart: unless-stopped
+    command: tunnel run --url http://netsuite-nginx:1002
+    environment:
+    - TUNNEL_TOKEN=eyJhIjoiODE3YmEzYzg5MGM0YTRmYzRjN2YwYTg1NmQ3YzFmODciLCJ0IjoiZjFmNTk4MmYtOTU3Yy00M2UxLTliNmQtMWEzZWE0OWNmMjg2IiwicyI6IlkyWTNNMkkyT0RNdE9EVTBNeTAwTkdWbExXSmtNakF0WkRObFpUSmxORGd3TkRRMyJ9
+    networks:
+    - netsuite
+
 networks:
   netsuite:
     driver: bridge
