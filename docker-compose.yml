@@ -56,7 +56,7 @@ services:
     networks:
       - netsuite
 
-cloudflared-netsuite-printing-server:
+  cloudflared-netsuite-printing-server:
     image: cloudflare/cloudflared:latest
     container_name: netsuite-printing-server-tunnel
     restart: unless-stopped
