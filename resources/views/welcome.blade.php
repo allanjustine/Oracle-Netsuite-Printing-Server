@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Netsuite Printing Server Sys</title>
+    <title>Printing Server Sys</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -29,7 +29,7 @@
                 <p class="text-4xl font-bold text-center text-white animate-typing">
                     Welcome to the Oracle NetSuite Printing System. <br />
                     To proceed with receipt printing, please visit the link below. <br /><br />
-                    <a href="https://netsuite-print.smctgroup.ph"
+                    <a href="https://printing.smctgroup.ph"
                         class="text-white p-2 bg-blue-500 hover:bg-blue-400 text-sm rounded-md">Click Here</a>
                 </p>
             </div>
