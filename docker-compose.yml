@@ -66,6 +66,22 @@ services:
     networks:
     - netsuite
 
+  queue-worker:
+    image: netsuite-server
+    container_name: netsuite-server-worker
+    working_dir: /var/www/
+    depends_on:
+      - netsuite-server
+    command: php artisan queue:work --tries=3
+    volumes:
+      - ./storage:/var/www/storage
+      - ./bootstrap/cache:/var/www/bootstrap/cache
+      - /home/webserver/systems/Oracle-Netsuite-Printing-Server/.env:/var/www/.env
+      - ./:/var/www
+    networks:
+      - netsuite
+    restart: unless-stopped
+
 networks:
   netsuite:
     driver: bridge

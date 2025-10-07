@@ -15,6 +15,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "nunomaduro/pokio": "0.1",
+        "predis/predis": "^3.2",
         "spatie/laravel-permission": "^6.15"
     },
     "require-dev": {
