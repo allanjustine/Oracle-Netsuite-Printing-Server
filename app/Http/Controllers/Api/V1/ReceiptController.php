@@ -49,9 +49,21 @@ class ReceiptController extends Controller
         $totalReceipts = $query->count();
 
         // fetch all receipts with when to apply search and sorting and pagination and per page
-        $receipts = $query->when($column && $direction, fn($query) => $query->orderBy($column, $direction))
-            ->when($searchTerm, fn($query) => $query->where("print_by", "LIKE", "%{$searchTerm}%")
-                ->orWhere("external_id", "LIKE", "%{$searchTerm}%"))
+        $receipts = $query->when(
+            $column && $direction,
+            fn($query)
+            =>
+            $query->orderBy($column, $direction)
+        )
+            ->when(
+                $searchTerm,
+                fn($query)
+                =>
+                $query->where("print_by", "LIKE", "%{$searchTerm}%")
+                    ->orWhere("external_id", "LIKE", "%{$searchTerm}%")
+                    ->orWhere('customer', "LIKE", "%{$searchTerm}%")
+                    ->orWhere('total_amount_due', "LIKE", "%{$searchTerm}%")
+            )
             ->paginate($per_page);
 
         // fetch latest 10 receipts
@@ -173,7 +185,8 @@ class ReceiptController extends Controller
             $existsReceipt->increment('print_count');
             $existsReceipt->update([
                 're_print'          => false,
-                'total_amount_due'  => $request->total_amount_due
+                'total_amount_due'  => $request->total_amount_due,
+                'customer'          => $request->customer
             ]);
             $receipt = $existsReceipt;
         } else {
@@ -181,7 +194,8 @@ class ReceiptController extends Controller
                 'external_id'       => $request->external_id,
                 'print_by'          => $request->print_by,
                 'print_count'       => 1,
-                'total_amount_due'  => $request->total_amount_due
+                'total_amount_due'  => $request->total_amount_due,
+                'customer'          => $request->customer
             ]);
         }
 
