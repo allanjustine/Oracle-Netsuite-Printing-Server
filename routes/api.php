@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/print-receipt-count', 'store');
         Route::patch('/print-receipt/{id}/update-reciept', 'update');
         Route::delete('/print-receipt/{id}/delete-reciept', 'destroy');
+        Route::post('/submit-next-reference-number', 'submit');
     });
 
     Route::controller(MaintenanceController::class)->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Events\ReceiptRecords;
+use App\Events\ReferenceNumberStatusEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Receipt;
 use Illuminate\Http\Request;
@@ -285,5 +286,24 @@ class ReceiptController extends Controller
         return response()->json([
             'message'       => 'Receipt deleted successfully',
         ], 204);
+    }
+
+    public function submit(Request $request)
+    {
+        $branch_code = $request->branch_code;
+        $current_reference_number = $request->current_reference_number;
+        $next_reference_number = (int) $current_reference_number + 1;
+
+        if ((int) $current_reference_number <= 0) {
+            return response()->json([
+                'message'       => 'Ops! current reference number must not be less than or equal to 0',
+            ], 400);
+        }
+
+        ReferenceNumberStatusEvent::dispatch($branch_code, $current_reference_number, $next_reference_number);
+
+        return response()->json([
+            'message'       => 'Next reference number submitted successfully',
+        ], 200);
     }
 }
