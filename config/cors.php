@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://printing.smctgroup.ph', 'http://localhost:3001', 'http://localhost:3000'],
+    'allowed_origins' => ['https://printing.smctgroup.ph', 'http://localhost:3001', 'http://localhost:3000', 'http://192.168.1.209:3001', 'https://p.smctgroup.ph'],
 
     'allowed_origins_patterns' => [],
 
