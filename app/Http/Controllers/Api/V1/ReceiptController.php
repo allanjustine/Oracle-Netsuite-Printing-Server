@@ -49,24 +49,6 @@ class ReceiptController extends Controller
         // total receipts count
         $totalReceipts = $query->count();
 
-        // fetch all receipts with when to apply search and sorting and pagination and per page
-        $receipts = $query->when(
-            $column && $direction,
-            fn($query)
-            =>
-            $query->orderBy($column, $direction)
-        )
-            ->when(
-                $searchTerm,
-                fn($query)
-                =>
-                $query->where("print_by", "LIKE", "%{$searchTerm}%")
-                    ->orWhere("external_id", "LIKE", "%{$searchTerm}%")
-                    ->orWhere('customer', "LIKE", "%{$searchTerm}%")
-                    ->orWhere('total_amount_due', "LIKE", "%{$searchTerm}%")
-            )
-            ->paginate($per_page);
-
         // fetch latest 10 receipts
         $latest_receipts = Receipt::latest()->take(10)->get();
 
@@ -94,12 +76,6 @@ class ReceiptController extends Controller
         // calculating percentage of monthly receipts
         $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format(($monthly_receipts_count - $last_monthly_receipts_count) / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
-        // get all receipts with external_id, print_count and re_print for existing receipt without pagination
-        $searchingIfExists = Receipt::where('external_id', $external_id)
-            ->where('print_count', ">=", 1)
-            ->where('re_print', false)
-            ->exists();
-
         // sum all total sales of over all receipts
         $overAllTotalAmountDue = Receipt::sum('total_amount_due');
 
@@ -111,7 +87,6 @@ class ReceiptController extends Controller
         $datas = async(
             fn() =>
             [
-                'receipts'                     => $receipts,
                 'latest_receipts'              => $latest_receipts,
                 'total_receipts'               => $totalReceipts,
                 'todays_receipts_count'        => $todays_receipts_count,
@@ -121,7 +96,6 @@ class ReceiptController extends Controller
                 'todays_percentage'            => $todays_percentage,
                 'monthly_percentage'           => $monthly_percentage,
                 'weekly_percentage'            => $weekly_percentage,
-                'searching_if_exists'          => $searchingIfExists,
                 'total_invoice'                => $totalInvoice,
                 'total_cust_pay'               => $totalCustPay,
                 'yesterdays_receipts_count'    => $yesterdays_receipts_count,
@@ -139,6 +113,55 @@ class ReceiptController extends Controller
         return response()->json([
             'message'                      => "All receipts fetched successfully",
             'datas'                        => await($datas)
+        ], 200);
+    }
+
+    public function getReceiptRecords()
+    {
+
+        // fetch all receipts query
+        $searchTerm = request('search');
+        $column = request('column');
+        $direction = request('direction');
+        $per_page = request('per_page');
+
+        // query all receipts
+        $receipts = Receipt::query()
+            ->when(
+                $column && $direction,
+                fn($query)
+                =>
+                $query->orderBy($column, $direction)
+            )
+            ->when(
+                $searchTerm,
+                fn($query)
+                =>
+                $query->where("print_by", "LIKE", "%{$searchTerm}%")
+                    ->orWhere("external_id", "LIKE", "%{$searchTerm}%")
+                    ->orWhere('customer', "LIKE", "%{$searchTerm}%")
+                    ->orWhere('total_amount_due', "LIKE", "%{$searchTerm}%")
+            )
+            ->paginate($per_page);
+
+        return response()->json([
+            'message'  => "Receipt records fetched successfully",
+            "receipts" => $receipts
+        ], 200);
+    }
+
+    public function existsPrint()
+    {
+        $external_id = request('external_id', '');
+
+        $searchingIfExists = Receipt::where('external_id', $external_id)
+            ->where('print_count', ">=", 1)
+            ->where('re_print', false)
+            ->exists();
+
+        return response()->json([
+            'message'             => "Checking data...",
+            'searching_if_exists' => $searchingIfExists
         ], 200);
     }
 

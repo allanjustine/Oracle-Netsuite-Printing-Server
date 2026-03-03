@@ -31,6 +31,8 @@ Route::prefix('v1')->group(function () {
         Route::patch('/print-receipt/{id}/update-reciept', 'update');
         Route::delete('/print-receipt/{id}/delete-reciept', 'destroy');
         Route::post('/submit-next-reference-number', 'submit');
+        Route::get('is-exists-reference-number', 'existsPrint');
+        Route::get('receipt-records-table', 'getReceiptRecords');
     });
 
     Route::controller(MaintenanceController::class)->group(function () {
