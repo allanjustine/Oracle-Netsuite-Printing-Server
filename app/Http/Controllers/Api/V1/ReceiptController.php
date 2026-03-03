@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Events\ReceiptRecords;
 use App\Events\ReferenceNumberStatusEvent;
 use App\Http\Controllers\Controller;
+use App\Events\ReceiptRecords;
 use App\Models\Receipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,20 +16,24 @@ class ReceiptController extends Controller
      */
     public function index(Request $request)
     {
-        // fetch all receipts query
-        $searchTerm = $request->search;
-        $column = $request->column;
-        $direction = $request->direction;
-        $per_page = $request->per_page;
-        $external_id = $request->external_id;
+        $yesterday = now()->yesterday();
+        $startOfTheWeek = now()->startOfWeek();
+        $endOfTheWeek = now()->endOfWeek();
+        $startOfLastWeek = now()->subWeek()->startOfWeek();
+        $endOfLastWeek = now()->subWeek()->endOfWeek();
+        $thisMonth = now()->month;
+        $thisYear = now()->year;
+        $thisLastMonth = now()->subMonth()->month;
+        $thisLastMonthYear = now()->subMonth()->year;
 
-        // query all receipts
+        // Kuhaon ang query para mag clone rata testing ug okay ba! hahays buhayts!
         $query = Receipt::query();
 
         // total invoice and total customer payment used clone to avoid changing the original query
         $totalInvoice = (clone $query)
             ->where('external_id', 'LIKE', '%INV-%')
             ->count();
+
         $totalCustPay = (clone $query)
             ->where('external_id', 'LIKE', '%CustPay-%')
             ->orWhere('external_id', 'LIKE', '%CSDEP-%')
@@ -40,6 +44,7 @@ class ReceiptController extends Controller
         $totalInvoiceSum = (clone $query)
             ->where('external_id', 'LIKE', '%INV-%')
             ->sum('total_amount_due');
+
         $totalCustPaySum = (clone $query)
             ->where('external_id', 'LIKE', '%CustPay-%')
             ->orWhere('external_id', 'LIKE', '%CSDEP-%')
@@ -47,25 +52,25 @@ class ReceiptController extends Controller
             ->sum('total_amount_due');
 
         // total receipts count
-        $totalReceipts = $query->count();
+        $totalReceipts = (clone $query)->count();
 
         // fetch latest 10 receipts
-        $latest_receipts = Receipt::latest()->take(10)->get();
+        $latest_receipts = (clone $query)->latest()->take(10)->get(['id', 'external_id', 'print_count', 'print_by', 'total_amount_due', 'created_at']);
 
         // get the total count of today and yesterday receipts
-        $todays_receipts_count = Receipt::whereToday('created_at')->count();
-        $yesterdays_receipts_count = Receipt::whereDate('created_at', now()->yesterday())->count();
+        $todays_receipts_count = (clone $query)->whereToday('created_at')->count();
+        $yesterdays_receipts_count = (clone $query)->whereDate('created_at', $yesterday)->count();
 
         // get the total weekly and last week receipts counts
-        $weekly_receipts_count = Receipt::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
-        $last_weekly_receipts_count = Receipt::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->count();
+        $weekly_receipts_count = (clone $query)->whereBetween('created_at', [$startOfTheWeek, $endOfTheWeek])->count();
+        $last_weekly_receipts_count = (clone $query)->whereBetween('created_at', [$startOfLastWeek, $endOfLastWeek])->count();
 
         // get the total count of monthly and last month receipts
-        $monthly_receipts_count = Receipt::whereMonth('created_at', now())->count();
-        $last_monthly_receipts_count = Receipt::whereMonth('created_at', now()->subMonth()->month)->count();
+        $monthly_receipts_count = (clone $query)->whereMonth('created_at', $thisMonth)->whereYear('created_at', $thisYear)->count();
+        $last_monthly_receipts_count = (clone $query)->whereMonth('created_at', $thisLastMonth)->whereYear('created_at', $thisLastMonthYear)->count();
 
         // get the total count of total branch who have printed records
-        $total_branch_print_records = Receipt::distinct('print_by')->count();
+        $total_branch_print_records = (clone $query)->distinct('print_by')->count();
 
         // calculating percentage of todays receipts
         $todays_percentage = $yesterdays_receipts_count > 0 ? number_format(($todays_receipts_count - $yesterdays_receipts_count) / $yesterdays_receipts_count * 100, 2) : number_format(100, 2);
@@ -77,42 +82,37 @@ class ReceiptController extends Controller
         $monthly_percentage = $last_monthly_receipts_count > 0 ? number_format(($monthly_receipts_count - $last_monthly_receipts_count) / $last_monthly_receipts_count * 100, 2) : number_format(100, 2);
 
         // sum all total sales of over all receipts
-        $overAllTotalAmountDue = Receipt::sum('total_amount_due');
+        $overAllTotalAmountDue = (clone $query)->sum('total_amount_due');
 
         // sum todays total sales of receipts
-        $todaysTotalAmountDue = Receipt::whereToday('created_at')->sum('total_amount_due');
+        $todaysTotalAmountDue = (clone $query)->whereToday('created_at')->sum('total_amount_due');
 
-        $mostPrintCountBranch = $this->mostPrintCountBranch();
-
-        $datas = async(
-            fn() =>
-            [
-                'latest_receipts'              => $latest_receipts,
-                'total_receipts'               => $totalReceipts,
-                'todays_receipts_count'        => $todays_receipts_count,
-                'weekly_receipts_count'        => $weekly_receipts_count,
-                'monthly_receipts_count'       => $monthly_receipts_count,
-                'total_branch_print_records'   => $total_branch_print_records,
-                'todays_percentage'            => $todays_percentage,
-                'monthly_percentage'           => $monthly_percentage,
-                'weekly_percentage'            => $weekly_percentage,
-                'total_invoice'                => $totalInvoice,
-                'total_cust_pay'               => $totalCustPay,
-                'yesterdays_receipts_count'    => $yesterdays_receipts_count,
-                'last_weekly_receipts_count'   => $last_weekly_receipts_count,
-                'last_monthly_receipts_count'  => $last_monthly_receipts_count,
-                'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
-                'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
-                'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
-                'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
-                'most_print_count_branch'      => $mostPrintCountBranch
-            ]
-        );
+        $datas = [
+            'latest_receipts'              => $latest_receipts,
+            'total_receipts'               => $totalReceipts,
+            'todays_receipts_count'        => $todays_receipts_count,
+            'weekly_receipts_count'        => $weekly_receipts_count,
+            'monthly_receipts_count'       => $monthly_receipts_count,
+            'total_branch_print_records'   => $total_branch_print_records,
+            'todays_percentage'            => $todays_percentage,
+            'monthly_percentage'           => $monthly_percentage,
+            'weekly_percentage'            => $weekly_percentage,
+            'total_invoice'                => $totalInvoice,
+            'total_cust_pay'               => $totalCustPay,
+            'yesterdays_receipts_count'    => $yesterdays_receipts_count,
+            'last_weekly_receipts_count'   => $last_weekly_receipts_count,
+            'last_monthly_receipts_count'  => $last_monthly_receipts_count,
+            'over_all_total_amount_due'    => number_format($overAllTotalAmountDue, 2, ".", ","),
+            'sum_invoice'                  => number_format($totalInvoiceSum, 2, ".", ","),
+            'sum_cust_pay'                 => number_format($totalCustPaySum, 2, ".", ","),
+            'todays_total_amount_due'      => number_format($todaysTotalAmountDue, 2, ".", ","),
+            'most_print_count_branch'      => $this->mostPrintCountBranch()
+        ];
 
 
         return response()->json([
-            'message'                      => "All receipts fetched successfully",
-            'datas'                        => await($datas)
+            'message' => "All receipts fetched successfully",
+            'datas'   => $datas
         ], 200);
     }
 
@@ -224,11 +224,11 @@ class ReceiptController extends Controller
         }
 
 
-        ReceiptRecords::dispatch($receipt);
+        ReceiptRecords::dispatch();
 
         return response()->json([
-            'message'       => ucfirst($request->external_id) . " receipt is created successfully.",
-            'receipt'       => $receipt
+            'message' => ucfirst($request->external_id) . " receipt is created successfully.",
+            'receipt' => $receipt
         ], 201);
     }
 
