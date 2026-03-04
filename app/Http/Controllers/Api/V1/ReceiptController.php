@@ -16,6 +16,7 @@ class ReceiptController extends Controller
      */
     public function index(Request $request)
     {
+        // Lista natu tanan date filter ari aron dile libog!
         $yesterday = now()->yesterday();
         $startOfTheWeek = now()->startOfWeek();
         $endOfTheWeek = now()->endOfWeek();
@@ -35,9 +36,7 @@ class ReceiptController extends Controller
             ->count();
 
         $totalCustPay = (clone $query)
-            ->where('external_id', 'LIKE', '%CustPay-%')
-            ->orWhere('external_id', 'LIKE', '%CSDEP-%')
-            ->orWhere('external_id', 'LIKE', '%CS-%')
+            ->whereNot('external_id', 'LIKE', '%INV-%')
             ->count();
 
         // sum all total invoice and total cr
@@ -46,9 +45,7 @@ class ReceiptController extends Controller
             ->sum('total_amount_due');
 
         $totalCustPaySum = (clone $query)
-            ->where('external_id', 'LIKE', '%CustPay-%')
-            ->orWhere('external_id', 'LIKE', '%CSDEP-%')
-            ->orWhere('external_id', 'LIKE', '%CS-%')
+            ->whereNot('external_id', 'LIKE', '%INV-%')
             ->sum('total_amount_due');
 
         // total receipts count
