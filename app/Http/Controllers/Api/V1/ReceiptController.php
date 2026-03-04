@@ -115,7 +115,6 @@ class ReceiptController extends Controller
 
     public function getReceiptRecords()
     {
-
         // fetch all receipts query
         $searchTerm = request('search');
         $column = request('column');
@@ -134,10 +133,12 @@ class ReceiptController extends Controller
                 $searchTerm,
                 fn($query)
                 =>
-                $query->where("print_by", "LIKE", "%{$searchTerm}%")
-                    ->orWhere("external_id", "LIKE", "%{$searchTerm}%")
-                    ->orWhere('customer', "LIKE", "%{$searchTerm}%")
-                    ->orWhere('total_amount_due', "LIKE", "%{$searchTerm}%")
+                $query->whereAny([
+                    "print_by",
+                    "external_id",
+                    'customer',
+                    'total_amount_due'
+                ], "LIKE", "%{$searchTerm}%")
             )
             ->paginate($per_page);
 
