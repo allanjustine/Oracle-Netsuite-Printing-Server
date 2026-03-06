@@ -41,9 +41,9 @@ class ReferenceNumberStatusEvent implements ShouldQueue, ShouldBroadcast
     public function toArray()
     {
         return [
-            'branch_code'               => $this->branch_code,
-            'current_reference_number'  => $this->current_reference_number,
-            'next_reference_number'     => $this->next_reference_number
+            'branch_code'              => $this->branch_code,
+            'current_reference_number' => $this->current_reference_number,
+            'next_reference_number'    => $this->next_reference_number
         ];
     }
 }

@@ -190,6 +190,8 @@ class ReceiptController extends Controller
         $existsReceipt = Receipt::where('external_id', $request->external_id)
             ->first();
 
+        $is_exists_branch = Receipt::query()->where('print_by', $request->print_by)->exists();
+
         if ($existsReceipt && $existsReceipt->print_count >= 1 && $existsReceipt?->re_print === false) {
 
             return response()->json([
@@ -221,8 +223,14 @@ class ReceiptController extends Controller
             ]);
         }
 
+        $receipt["re_print"] = false;
 
-        ReceiptRecords::dispatch();
+        $data = [
+            'receipt'          => $receipt,
+            'is_exists_branch' => $is_exists_branch
+        ];
+
+        ReceiptRecords::dispatch($data);
 
         return response()->json([
             'message' => ucfirst($request->external_id) . " receipt is created successfully.",
