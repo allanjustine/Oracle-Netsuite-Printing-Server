@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\RequestReprintController;
 use App\Http\Controllers\Api\V1\Admin\AdminController;
 use App\Http\Controllers\Api\V1\Admin\MaintenanceController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -39,6 +40,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/maintenance-mode-on', 'maintenanceModeOn');
         Route::post('/maintenance-mode-off', 'maintenanceModeOff');
         Route::get('/maintenance-mode', 'index');
+    });
+
+    Route::controller(RequestReprintController::class)->group(function () {
+        Route::get('request-reprints', 'index');
+        Route::patch('request-reprints/{reprint_reason}/reject', 'destroy');
+        Route::post('request-reprints', 'store');
+        Route::patch('request-reprints/{reprint_reason}/approve', 'update');
     });
 
     Route::get('/app-version', function () {

@@ -153,8 +153,13 @@ class ReceiptController extends Controller
         $external_id = request('external_id', '');
 
         $searchingIfExists = Receipt::where('external_id', $external_id)
-            ->where('print_count', ">=", 1)
-            ->where('re_print', false)
+            ->where(
+                fn($q)
+                =>
+                $q->where('print_count', ">=", 1)
+                    ->where('re_print', false)
+            )
+            ->orWhereRelation('reprintReasons', 'status', 'pending')
             ->exists();
 
         return response()->json([
@@ -199,6 +204,13 @@ class ReceiptController extends Controller
             ], 400);
         }
 
+        if ($existsReceipt && $existsReceipt?->reprintReasons()?->first()?->status === "pending") {
+            return response()->json([
+                'message'    => "{$request->external_id} receipt is still pending for reprint please try again later",
+                'is_pending' => true
+            ], 400);
+        }
+
         if ($request->external_id === null || $request->print_by === null) {
             return response()->json([
                 'message'       => "Ops! Something went wrong. Please try again.",
@@ -212,6 +224,12 @@ class ReceiptController extends Controller
                 'total_amount_due'  => $request->total_amount_due,
                 'customer'          => $request->customer
             ]);
+            $existsReceipt->reprintReasons()
+                ->first()
+                ->update([
+                    'status' => 'completed'
+                ]);
+
             $receipt = $existsReceipt;
         } else {
             $receipt = Receipt::create([

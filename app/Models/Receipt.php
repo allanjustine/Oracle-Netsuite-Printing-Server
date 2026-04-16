@@ -14,4 +14,10 @@ class Receipt extends Model
             're_print' => 'boolean'
         ];
     }
+
+    public function reprintReasons()
+    {
+        return $this->hasMany(ReprintReason::class)
+            ->latest();
+    }
 }
