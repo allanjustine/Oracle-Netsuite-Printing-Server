@@ -158,8 +158,8 @@ class ReceiptController extends Controller
                 =>
                 $q->where('print_count', ">=", 1)
                     ->where('re_print', false)
+                    ->whereRelation('reprintReasons', 'status', 'pending')
             )
-            ->orWhereRelation('reprintReasons', 'status', 'pending')
             ->exists();
 
         return response()->json([
