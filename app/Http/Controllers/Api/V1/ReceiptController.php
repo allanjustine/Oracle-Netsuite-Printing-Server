@@ -158,7 +158,7 @@ class ReceiptController extends Controller
                 =>
                 $q->where('print_count', ">=", 1)
                     ->where('re_print', false)
-                    ->whereRelation('reprintReasons', 'status', 'pending')
+                    ->orWhereRelation('reprintReasons', 'status', 'pending')
             )
             ->exists();
 
@@ -224,9 +224,9 @@ class ReceiptController extends Controller
                 'total_amount_due'  => $request->total_amount_due,
                 'customer'          => $request->customer
             ]);
-            $existsReceipt->reprintReasons()
-                ->first()
-                ->update([
+            $existsReceipt?->reprintReasons()
+                ?->first()
+                ?->update([
                     'status' => 'completed'
                 ]);
 
